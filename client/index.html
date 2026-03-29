@@ -68,6 +68,10 @@
         const response = await fetch('/api/topology');
         const data = await response.json();
         
+        console.log('Fetched topology:', data);
+        console.log('Total devices:', data.nodes.length);
+        console.log('Total connections:', data.edges.length);
+        
         // Initialize Cytoscape
         cy = cytoscape({
           container: document.getElementById('cy'),
@@ -78,51 +82,52 @@
           },
           
           style: [
+            // Node styles - use color and size from data
             {
               selector: 'node',
               style: {
-                'background-color': '#22d3ee',
+                'background-color': 'data(color)',
                 'label': 'data(label)',
                 'color': '#e0e0e0',
                 'text-valign': 'center',
                 'text-halign': 'center',
-                'font-size': '12px',
-                'width': '60px',
-                'height': '60px',
+                'font-size': '11px',
+                'width': 'data(size)',
+                'height': 'data(size)',
                 'text-wrap': 'wrap',
-                'text-max-width': '80px'
+                'text-max-width': '100px',
+                'font-weight': '500'
               }
             },
-            {
-              selector: 'node[type="router"]',
-              style: {
-                'background-color': '#a78bfa',
-                'width': '70px',
-                'height': '70px'
-              }
-            },
-            {
-              selector: 'node[type="switch"]',
-              style: {
-                'background-color': '#4ade80',
-                'width': '80px',
-                'height': '80px'
-              }
-            },
-            {
-              selector: 'node[type="raspberry-pi"]',
-              style: {
-                'background-color': '#22d3ee'
-              }
-            },
+            
+            // Edge styles - ethernet (solid) vs wireless (dashed)
             {
               selector: 'edge',
               style: {
                 'width': 2,
                 'line-color': '#4ade80',
-                'target-arrow-color': '#4ade80',
-                'target-arrow-shape': 'triangle',
                 'curve-style': 'bezier'
+              }
+            },
+            {
+              selector: 'edge[type="ethernet"]',
+              style: {
+                'line-style': 'solid',
+                'line-color': '#58a6ff'
+              }
+            },
+            {
+              selector: 'edge[type="wireless"]',
+              style: {
+                'line-style': 'dashed',
+                'line-color': '#f59e0b'
+              }
+            },
+            {
+              selector: 'edge[type="virtual"]',
+              style: {
+                'line-style': 'dotted',
+                'line-color': '#6b7280'
               }
             }
           ],
@@ -142,12 +147,35 @@
           }
         });
         
+        // Add tooltip on hover
+        cy.on('mouseover', 'node', function(evt) {
+          const node = evt.target;
+          const data = node.data();
+          const tooltip = `
+${data.label}
+IP: ${data.ip}
+Type: ${data.type}
+${data.manufacturer ? `Manufacturer: ${data.manufacturer}` : ''}
+${data.model ? `Model: ${data.model}` : ''}
+Status: ${data.status}
+Connection: ${data.connection_type}
+          `.trim();
+          
+          console.log(tooltip);
+        });
+        
         console.log('Topology initialized successfully');
         console.log('Nodes:', cy.nodes().length);
         console.log('Edges:', cy.edges().length);
         
       } catch (error) {
         console.error('Failed to initialize topology:', error);
+      }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initTopology);
+  </script>
       }
     }
     
