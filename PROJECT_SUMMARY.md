@@ -1,11 +1,12 @@
 # HomeLabViewer - Project Summary
 
-## ✅ COMPLETE - Production Ready
+## ✅ DEPLOYED & PRODUCTION READY
 
 **Location:** `C:\Users\john_\dev\HomeLabViewer`  
-**Status:** Fully functional, tested locally, ready for deployment  
+**Status:** Fully functional, deployed to appserv1, industry-standard icons  
 **URL (local):** http://localhost:8200  
-**URL (production):** http://192.168.4.148/homelabviewer/ (pending deployment)
+**URL (production):** http://192.168.4.148:8200 ✅ LIVE  
+**Last Updated:** 2026-03-29 (Icon upgrade to Tabler Icons)
 
 ---
 
@@ -15,15 +16,49 @@ A clean, modern network topology visualization for the SmartLab homelab environm
 
 ### Features Implemented
 - ✅ Real-time network topology visualization using Cytoscape.js
+- ✅ Industry-standard Tabler Icons (17 device types, stroke-based SVG)
+- ✅ Intelligent device icon matching algorithm (200+ lines, hierarchical)
 - ✅ Color-coded node types (routers, switches, Raspberry Pi nodes)
-- ✅ Proper network topology (6 nodes, 5 edges showing SmartLab infrastructure)
+- ✅ Proper network topology (SmartLab infrastructure visualization)
 - ✅ Clean dark UI with cyan/purple/green color scheme
 - ✅ Local-only libraries (no CDN dependencies)
-- ✅ FastAPI backend serving topology data
-- ✅ Docker deployment ready
-- ✅ Git repository initialized with 2 commits
+- ✅ FastAPI backend serving topology data from Home Assistant
+- ✅ Docker deployment (live on appserv1)
+- ✅ Git repository with comprehensive history
 
-### Network Topology Displayed
+---
+
+## Recent Updates
+
+### Icon System Upgrade (2026-03-29)
+**Upgraded from 6 custom icons to 17 industry-standard Tabler Icons**
+
+**New Icon Coverage:**
+- Network: router, switch, network, wifi (4 types)
+- Servers: server, cpu, database (3 types)
+- Containers: container, cloud (2 types)
+- Devices: desktop, mobile, TV, printer (4 types)
+- Smart Home: smart-home, bulb, temperature, bluetooth (4 types)
+
+**Matching Algorithm Features:**
+- Hierarchical device detection (network → servers → containers → devices → IoT)
+- Multi-field matching (domain, integration, group, entityId, deviceClass)
+- Smart fallbacks (network → smart-home default)
+- 200+ lines of pattern matching logic
+- Handles 67 SmartLab devices across all categories
+
+**Technical Implementation:**
+- Stroke-based SVG icons (professional appearance)
+- CORS-safe data URI rendering
+- Auto-assignment during topology load
+- 35% icon size relative to node diameter
+- Zero manual configuration required
+
+**See:** `ICON_UPGRADE_SESSION.md` for full details and `LESSONS_LEARNED.md` for deployment insights.
+
+---
+
+## Network Topology Displayed
 1. **Eero Pro 6E** (router) - Purple, connects to switch
 2. **UGREEN CM753** (5-port 2.5GbE switch) - Green (hub), largest node
 3. **mgmt1** (Pi 4, management plane, 192.168.4.150) - Cyan
