@@ -68,8 +68,29 @@
         const response = await fetch('/api/topology');
         const data = await response.json();
         
+        // Filter out parent/category nodes - we only want actual devices
+        const deviceNodes = data.nodes.filter(node => !node.data.isParent);
+        
+        // Apply color based on device type
+        const colorMap = {
+          'router': '#a855f7',      // Purple
+          'switch': '#22c55e',       // Green  
+          'pi': '#06b6d4',           // Cyan
+          'streaming': '#f97316',    // Orange
+          'esp32': '#eab308',        // Yellow
+          'homeassistant': '#ec4899',// Pink
+          'container': '#6b7280',    // Gray
+          'default': '#3b82f6'       // Blue
+        };
+        
+        deviceNodes.forEach(node => {
+          const type = node.data.type || 'unknown';
+          node.data.color = colorMap[type] || colorMap.default;
+          node.data.size = type === 'router' ? 70 : 60;
+        });
+        
         console.log('Fetched topology:', data);
-        console.log('Total devices:', data.nodes.length);
+        console.log('Total devices:', deviceNodes.length);
         console.log('Total connections:', data.edges.length);
         
         // Initialize Cytoscape
@@ -77,7 +98,7 @@
           container: document.getElementById('cy'),
           
           elements: {
-            nodes: data.nodes,
+            nodes: deviceNodes,
             edges: data.edges
           },
           
