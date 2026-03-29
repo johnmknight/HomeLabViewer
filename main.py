@@ -73,6 +73,15 @@ async def get_topology():
     """
     Fetch devices from SmartLabDeviceRegistry and transform to Cytoscape format
     """
+    # Color mapping for groups
+    group_colors = {
+        "Management": "#f59e0b",  # Orange
+        "IoT": "#10b981",         # Green
+        "Networking": "#3b82f6",  # Blue
+        "Compute": "#8b5cf6",     # Purple
+        "Unassigned": "#6b7280"   # Gray
+    }
+    
     # Fetch enriched devices from microservice
     devices = await fetch_devices_from_registry()
     
@@ -91,12 +100,16 @@ async def get_topology():
         group = device.get('group', 'Unassigned')
         groups.add(group)
         
+        # Get color for this group
+        color = group_colors.get(group, "#6b7280")  # Default to gray
+        
         # Create node
         node_data = {
             "id": device['id'],
             "label": device.get('name', device['id']),
             "group": group,
-            "parent": f"group_{group}",  # Compound node parent
+            "color": color,  # Add color property
+            # No parent - we'll use colors/styles to show groups instead of compound nodes
             "domain": domain,
             "state": device.get('state', 'unknown'),
             "integration": device.get('integration', ''),
@@ -109,15 +122,5 @@ async def get_topology():
         }
         
         nodes.append({"data": node_data})
-    
-    # Create group/parent nodes
-    for group_name in groups:
-        nodes.append({
-            "data": {
-                "id": f"group_{group_name}",
-                "label": group_name.upper(),
-                "isParent": True
-            }
-        })
     
     return {"nodes": nodes, "edges": edges}

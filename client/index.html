@@ -13,6 +13,8 @@
       color: #e0e0e0;
       overflow: hidden;
     }
+    
+    /* Header */
     #header {
       height: 60px;
       background: #141824;
@@ -21,6 +23,8 @@
       align-items: center;
       padding: 0 24px;
       gap: 16px;
+      position: relative;
+      z-index: 100;
     }
     h1 {
       font-size: 18px;
@@ -35,6 +39,8 @@
       background: #4ade80;
       box-shadow: 0 0 8px #4ade80;
     }
+    
+    /* Layout Controls */
     .layout-controls {
       margin-left: auto;
       display: flex;
@@ -56,12 +62,16 @@
       background: #334155;
       border-color: #475569;
     }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
     .btn-primary {
       background: #0ea5e9;
       border-color: #0ea5e9;
       color: #fff;
     }
-    .btn-primary:hover {
+    .btn-primary:hover:not(:disabled) {
       background: #0284c7;
       border-color: #0284c7;
     }
@@ -70,7 +80,7 @@
       border-color: #dc2626;
       color: #fff;
     }
-    .btn-danger:hover {
+    .btn-danger:hover:not(:disabled) {
       background: #b91c1c;
       border-color: #b91c1c;
     }
@@ -82,7 +92,7 @@
       color: #e2e8f0;
       font-size: 13px;
       cursor: pointer;
-      min-width: 160px;
+      min-width: 180px;
     }
     select:hover {
       background: #334155;
@@ -93,15 +103,128 @@
       height: 24px;
       background: #334155;
     }
-    #cy-container {
+    
+    /* Main Container */
+    #main-container {
+      display: flex;
       height: calc(100vh - 60px);
-      width: 100%;
+      position: relative;
+    }
+    
+    /* Cytoscape Container */
+    #cy-container {
+      flex: 1;
       position: relative;
     }
     #cy {
       width: 100%;
       height: 100%;
       background: #0a0e1a;
+    }
+    
+    /* Sidebar */
+    #sidebar {
+      width: 320px;
+      background: #141824;
+      border-left: 1px solid #2a2f3f;
+      display: none;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    #sidebar.open {
+      display: flex;
+    }
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid #2a2f3f;
+    }
+    .sidebar-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .sidebar-close {
+      float: right;
+      background: none;
+      border: none;
+      color: #64748b;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+    .sidebar-close:hover {
+      color: #e2e8f0;
+    }
+    .sidebar-content {
+      padding: 20px;
+      flex: 1;
+    }
+    .info-group {
+      margin-bottom: 24px;
+    }
+    .info-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    .info-value {
+      font-size: 14px;
+      color: #e2e8f0;
+      margin-bottom: 8px;
+    }
+    .info-value.mono {
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+      font-size: 12px;
+      color: #22d3ee;
+    }
+    .tag {
+      display: inline-block;
+      padding: 3px 10px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #cbd5e1;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+    
+    /* Context Menu */
+    #context-menu {
+      position: absolute;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 6px;
+      min-width: 180px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      display: none;
+      z-index: 1000;
+    }
+    #context-menu.show {
+      display: block;
+    }
+    .menu-item {
+      padding: 8px 12px;
+      font-size: 13px;
+      color: #e2e8f0;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.15s;
+    }
+    .menu-item:hover {
+      background: #334155;
+    }
+    .menu-separator {
+      height: 1px;
+      background: #334155;
+      margin: 6px 0;
     }
   </style>
 </head>
@@ -110,22 +233,51 @@
     <div class="status-dot"></div>
     <h1>HomeLabViewer</h1>
     <div class="layout-controls">
-      <select id="layout-select">
-        <option value="">Select Layout...</option>
+      <select id="layout-select" onchange="applyLayoutMode()">
+        <option value="">Select Layout Mode...</option>
+        <option value="zone">Zone Layout</option>
+        <option value="tree">Tree Layout</option>
+        <option value="lanes">Lanes Layout</option>
+        <option value="physical">Physical Layout</option>
       </select>
-      <button class="btn btn-primary" onclick="saveLayout()">Save</button>
-      <button class="btn" onclick="loadLayout()">Load</button>
-      <button class="btn btn-danger" onclick="deleteLayout()">Delete</button>
+      <button class="btn btn-primary" onclick="savePositions()">Save</button>
+      <button class="btn" onclick="loadPositions()">Load</button>
       <div class="separator"></div>
       <button class="btn" onclick="resetLayout()">Reset</button>
     </div>
   </div>
-  <div id="cy-container">
-    <div id="cy"></div>
+  
+  <div id="main-container">
+    <div id="cy-container">
+      <div id="cy"></div>
+    </div>
+    
+    <div id="sidebar">
+      <div class="sidebar-header">
+        <button class="sidebar-close" onclick="closeSidebar()">×</button>
+        <div class="sidebar-title">Device Details</div>
+      </div>
+      <div class="sidebar-content" id="sidebar-content">
+        <p style="color: #64748b; font-size: 13px;">Select a device to view details</p>
+      </div>
+    </div>
+  </div>
+  
+  <div id="context-menu">
+    <div class="menu-item" onclick="contextMenuAction('details')">View Details</div>
+    <div class="menu-item" onclick="contextMenuAction('center')">Center in View</div>
+    <div class="menu-separator"></div>
+    <div class="menu-item" onclick="contextMenuAction('copy-id')">Copy Entity ID</div>
+    <div class="menu-item" onclick="contextMenuAction('copy-ip')">Copy IP Address</div>
   </div>
   
   <script>
-    // SVG icon library (Tabler icons - filled versions for better visibility)
+    // State management
+    let cy;
+    let currentLayoutMode = '';
+    let contextMenuTarget = null;
+    
+    // SVG icon library (Tabler icons)
     const icons = {
       'icon-router': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
         <path fill="currentColor" d="M17 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"/>
@@ -164,53 +316,112 @@
       </svg>`
     };
     
-    // Initialize Cytoscape.js topology visualization
-    let cy;
-
-    // Layout Management Functions
-    const STORAGE_KEY = 'homelabviewer_layouts';
+    // =======================
+    // Layout Mode Functions
+    // =======================
     
-    function getLayouts() {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : {};
-    }
-    
-    function saveLayouts(layouts) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(layouts));
-    }
-    
-    function updateLayoutDropdown() {
+    async function applyLayoutMode() {
       const select = document.getElementById('layout-select');
-      const layouts = getLayouts();
-      const currentValue = select.value;
+      currentLayoutMode = select.value;
       
-      // Clear and rebuild options
-      select.innerHTML = '<option value="">Select Layout...</option>';
-      
-      Object.keys(layouts).sort().forEach(name => {
-        const option = document.createElement('option');
-        option.value = name;
-        option.textContent = `${name} (${new Date(layouts[name].timestamp).toLocaleDateString()})`;
-        select.appendChild(option);
-      });
-      
-      // Restore selection if it still exists
-      if (currentValue && layouts[currentValue]) {
-        select.value = currentValue;
-      }
-    }
-    
-    function saveLayout() {
+      if (!currentLayoutMode) return;
       if (!cy) {
         alert('Topology not loaded yet');
         return;
       }
       
-      const name = prompt('Enter layout name:');
-      if (!name) return;
+      // Try to load saved positions for this mode first
+      const loaded = await loadPositions(true);
+      if (loaded) {
+        console.log(`Loaded saved positions for ${currentLayoutMode} mode`);
+        return;
+      }
       
-      if (name.trim() === '') {
-        alert('Layout name cannot be empty');
+      // Otherwise apply the algorithmic layout
+      let layoutConfig;
+      
+      switch (currentLayoutMode) {
+        case 'zone':
+          // Zone layout - grouped by parent (compound nodes)
+          layoutConfig = {
+            name: 'cose',
+            animate: true,
+            animationDuration: 1000,
+            fit: true,
+            padding: 50,
+            nodeRepulsion: 8000,
+            idealEdgeLength: 150,
+            edgeElasticity: 100,
+            gravity: 1,
+            numIter: 1000
+          };
+          break;
+          
+        case 'tree':
+          // Tree layout - hierarchical top-down
+          layoutConfig = {
+            name: 'breadthfirst',
+            animate: true,
+            animationDuration: 1000,
+            fit: true,
+            padding: 50,
+            directed: true,
+            spacingFactor: 1.5,
+            avoidOverlap: true
+          };
+          break;
+          
+        case 'lanes':
+          // Lanes layout - horizontal swim lanes
+          layoutConfig = {
+            name: 'grid',
+            animate: true,
+            animationDuration: 1000,
+            fit: true,
+            padding: 50,
+            rows: 3,
+            avoidOverlap: true,
+            avoidOverlapPadding: 20
+          };
+          break;
+          
+        case 'physical':
+          // Physical layout - force-directed like real network
+          layoutConfig = {
+            name: 'cose',
+            animate: true,
+            animationDuration: 1500,
+            fit: true,
+            padding: 50,
+            nodeRepulsion: 10000,
+            idealEdgeLength: 200,
+            edgeElasticity: 150,
+            gravity: 0.5,
+            numIter: 2000,
+            randomize: false
+          };
+          break;
+          
+        default:
+          return;
+      }
+      
+      cy.layout(layoutConfig).run();
+      console.log(`Applied ${currentLayoutMode} layout`);
+    }
+    
+    // =======================
+    // Position Save/Load Functions
+    // =======================
+    
+    async function savePositions() {
+      if (!cy) {
+        alert('Topology not loaded yet');
+        return;
+      }
+      
+      if (!currentLayoutMode) {
+        alert('Please select a layout mode first');
         return;
       }
       
@@ -221,323 +432,389 @@
         positions[node.id()] = { x: pos.x, y: pos.y };
       });
       
-      // Save to localStorage
-      const layouts = getLayouts();
-      layouts[name] = {
-        positions: positions,
-        timestamp: new Date().toISOString()
-      };
-      saveLayouts(layouts);
-      
-      updateLayoutDropdown();
-      document.getElementById('layout-select').value = name;
-      
-      console.log(`Layout "${name}" saved with ${Object.keys(positions).length} nodes`);
-    }
-    
-    function loadLayout() {
-      if (!cy) {
-        alert('Topology not loaded yet');
-        return;
-      }
-      
-      const select = document.getElementById('layout-select');
-      const layoutName = select.value;
-      
-      if (!layoutName) {
-        alert('Please select a layout to load');
-        return;
-      }
-      
-      const layouts = getLayouts();
-      const layout = layouts[layoutName];
-      
-      if (!layout) {
-        alert('Layout not found');
-        return;
-      }
-      
-      // Apply saved positions
-      let appliedCount = 0;
-      cy.nodes().forEach(node => {
-        const savedPos = layout.positions[node.id()];
-        if (savedPos) {
-          node.position(savedPos);
-          appliedCount++;
+      try {
+        // Save to backend API
+        const response = await fetch(`/api/positions/${currentLayoutMode}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ positions })
+        });
+        
+        if (response.ok) {
+          console.log(`Positions saved for ${currentLayoutMode} mode (${Object.keys(positions).length} nodes)`);
+          alert(`Layout saved for ${currentLayoutMode} mode!`);
+        } else {
+          throw new Error('Save failed');
         }
-      });
-      
-      console.log(`Layout "${layoutName}" loaded - applied ${appliedCount} node positions`);
+      } catch (error) {
+        console.error('Failed to save positions:', error);
+        alert('Failed to save layout positions');
+      }
     }
     
-    function deleteLayout() {
-      const select = document.getElementById('layout-select');
-      const layoutName = select.value;
+    async function loadPositions(silent = false) {
+      if (!cy) return false;
       
-      if (!layoutName) {
-        alert('Please select a layout to delete');
-        return;
+      if (!currentLayoutMode) {
+        if (!silent) alert('Please select a layout mode first');
+        return false;
       }
       
-      if (!confirm(`Delete layout "${layoutName}"?`)) {
-        return;
+      try {
+        // Load from backend API
+        const response = await fetch(`/api/positions/${currentLayoutMode}`);
+        if (!response.ok) {
+          if (!silent) console.log(`No saved positions for ${currentLayoutMode} mode`);
+          return false;
+        }
+        
+        const data = await response.json();
+        const positions = data.positions || {};
+        
+        if (Object.keys(positions).length === 0) {
+          if (!silent) console.log('No positions found');
+          return false;
+        }
+        
+        // Apply saved positions
+        let appliedCount = 0;
+        cy.nodes().forEach(node => {
+          const savedPos = positions[node.id()];
+          if (savedPos) {
+            node.position(savedPos);
+            appliedCount++;
+          }
+        });
+        
+        if (!silent) {
+          console.log(`Loaded ${appliedCount} positions for ${currentLayoutMode} mode`);
+          alert(`Layout loaded for ${currentLayoutMode} mode!`);
+        }
+        return true;
+      } catch (error) {
+        console.error('Failed to load positions:', error);
+        if (!silent) alert('Failed to load layout positions');
+        return false;
       }
-      
-      const layouts = getLayouts();
-      delete layouts[layoutName];
-      saveLayouts(layouts);
-      
-      updateLayoutDropdown();
-      console.log(`Layout "${layoutName}" deleted`);
     }
     
     function resetLayout() {
-      if (!cy) {
-        alert('Topology not loaded yet');
+      if (!cy || !currentLayoutMode) {
+        alert('Please select a layout mode first');
         return;
       }
       
-      if (!confirm('Reset to automatic layout? This will discard current positions.')) {
+      if (!confirm(`Reset ${currentLayoutMode} layout to algorithm default?`)) {
         return;
       }
       
-      // Re-run the cose layout algorithm
-      cy.layout({
-        name: 'cose',
-        animate: true,
-        animationDuration: 1000,
-        fit: true,
-        padding: 50,
-        nodeRepulsion: 8000,
-        idealEdgeLength: 150,
-        edgeElasticity: 100,
-        gravity: 1,
-        numIter: 1000,
-        randomize: true
-      }).run();
-      
-      console.log('Layout reset to automatic');
+      // Re-apply the layout algorithm
+      applyLayoutMode();
     }
-
-    async function initTopology() {
-      try {
-        // Fetch topology data from API
-        const response = await fetch('/api/topology');
-        const data = await response.json();
+    
+    // =======================
+    // Context Menu Functions
+    // =======================
+    
+    function showContextMenu(event, target) {
+      contextMenuTarget = target;
+      const menu = document.getElementById('context-menu');
+      menu.style.left = event.renderedPosition.x + 'px';
+      menu.style.top = event.renderedPosition.y + 'px';
+      menu.classList.add('show');
+      
+      // Close menu when clicking elsewhere
+      setTimeout(() => {
+        document.addEventListener('click', hideContextMenu, { once: true });
+      }, 100);
+    }
+    
+    function hideContextMenu() {
+      document.getElementById('context-menu').classList.remove('show');
+      contextMenuTarget = null;
+    }
+    
+    function contextMenuAction(action) {
+      hideContextMenu();
+      
+      if (!contextMenuTarget) return;
+      
+      const node = contextMenuTarget;
+      const data = node.data();
+      
+      switch (action) {
+        case 'details':
+          showSidebar(node);
+          break;
+        case 'center':
+          cy.center(node);
+          cy.zoom({
+            level: 1.5,
+            position: node.position()
+          });
+          break;
+        case 'copy-id':
+          navigator.clipboard.writeText(data.id);
+          console.log('Copied entity ID:', data.id);
+          break;
+        case 'copy-ip':
+          if (data.ip) {
+            navigator.clipboard.writeText(data.ip);
+            console.log('Copied IP:', data.ip);
+          }
+          break;
+      }
+    }
+    
+    // =======================
+    
+    // =======================
+    // Sidebar Functions
+    // =======================
+    
+    function showSidebar(node) {
+      const sidebar = document.getElementById('sidebar');
+      const content = document.getElementById('sidebar-content');
+      const data = node.data();
+      
+      // Build sidebar HTML
+      let html = `
+        <div class="info-group">
+          <div class="info-label">Device Name</div>
+          <div class="info-value">${data.label || data.id}</div>
+        </div>
         
-        console.log('Fetched topology - Nodes:', data.nodes.length, 'Edges:', data.edges.length);
+        <div class="info-group">
+          <div class="info-label">Entity ID</div>
+          <div class="info-value mono">${data.id}</div>
+        </div>
+        
+        <div class="info-group">
+          <div class="info-label">Group</div>
+          <div class="tag">${data.group || 'Unassigned'}</div>
+          <div style="font-size: 11px; color: #64748b; margin-top: 6px;">
+            Source: ${data.group_source || 'unknown'}
+          </div>
+        </div>
+        
+        <div class="info-group">
+          <div class="info-label">Domain</div>
+          <div class="info-value">${data.domain || 'unknown'}</div>
+        </div>
+      `;
+      
+      // Add state
+      if (data.state) {
+        html += `
+          <div class="info-group">
+            <div class="info-label">State</div>
+            <div class="info-value">${data.state}</div>
+          </div>
+        `;
+      }
+      
+      // Add integration
+      if (data.integration) {
+        html += `
+          <div class="info-group">
+            <div class="info-label">Integration</div>
+            <div class="info-value">${data.integration}</div>
+          </div>
+        `;
+      }
+      
+      // Add IP if available
+      if (data.ip) {
+        html += `
+          <div class="info-group">
+            <div class="info-label">IP Address</div>
+            <div class="info-value mono">${data.ip}</div>
+          </div>
+        `;
+      }
+      
+      // Add manufacturer if available
+      if (data.manufacturer) {
+        html += `
+          <div class="info-group">
+            <div class="info-label">Manufacturer</div>
+            <div class="info-value">${data.manufacturer}</div>
+          </div>
+        `;
+      }
+      
+      // Add model if available
+      if (data.model) {
+        html += `
+          <div class="info-group">
+            <div class="info-label">Model</div>
+            <div class="info-value">${data.model}</div>
+          </div>
+        `;
+      }
+      
+      // Add last changed
+      if (data.last_changed) {
+        const date = new Date(data.last_changed);
+        html += `
+          <div class="info-group">
+            <div class="info-label">Last Changed</div>
+            <div class="info-value" style="font-size: 12px;">
+              ${date.toLocaleString()}
+            </div>
+          </div>
+        `;
+      }
+      
+      content.innerHTML = html;
+      sidebar.classList.add('open');
+    }
+    
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('open');
+    }
+    
+    // =======================
+    // Initialization
+    // =======================
+    
+    async function initializeTopology() {
+      try {
+        // Fetch topology data from backend
+        const response = await fetch('/api/topology');
+        if (!response.ok) throw new Error('Failed to fetch topology');
+        
+        const topologyData = await response.json();
+        console.log('Loaded topology:', topologyData.nodes.length, 'nodes');
         
         // Initialize Cytoscape
         cy = cytoscape({
           container: document.getElementById('cy'),
           
-          elements: {
-            nodes: data.nodes,
-            edges: data.edges
-          },
+          elements: topologyData,
           
           style: [
-            // Parent/category node styles
+            // Device nodes (all nodes now, no compound structure)
             {
-              selector: 'node[isParent]',
+              selector: 'node',
               style: {
-                'background-color': '#1e293b',
-                'background-opacity': 0.6,
+                'width': 40,
+                'height': 40,
+                'background-color': 'data(color)',
+                'background-opacity': 0.9,
                 'border-width': 2,
-                'border-color': '#334155',
-                'label': 'data(label)',
-                'text-valign': 'top',
-                'text-halign': 'center',
-                'text-margin-y': -10,
-                'font-size': 11,
-                'color': '#64748b',
-                'font-weight': 600,
-                'text-transform': 'uppercase',
-                'padding': 15
+                'border-color': '#fff',
+                'border-opacity': 0.3,
+                'label': '',  // Hide labels by default
+                'shape': 'roundrectangle'
               }
             },
             
-            // Device node base style
+            // Selected node
             {
-              selector: 'node[!isParent]',
+              selector: 'node:selected',
               style: {
-                'width': 70,
-                'height': 70,
-                'background-color': '#1e293b',
-                'shape': 'round-rectangle',
-                'border-width': 2,
-                'border-color': '#475569',
-                'label': 'data(label)',
-                'text-valign': 'bottom',
-                'text-halign': 'center',
-                'text-margin-y': 8,
-                'font-size': 10,
-                'color': '#cbd5e1',
-                'text-wrap': 'wrap',
-                'text-max-width': '90px',
-                'font-weight': 500
-              }
-            },
-            
-            // Router nodes - purple + router icon
-            {
-              selector: 'node[type="router"]',
-              style: {
-                'background-color': '#7c3aed',
-                'border-color': '#a78bfa',
-                'background-image': 'data:image/svg+xml;utf8,' + encodeURIComponent(icons['icon-router'].replace(/currentColor/g, '#ffffff')),
-                'background-fit': 'none',
-                'background-clip': 'none',
-                'background-width': '36px',
-                'background-height': '36px',
-                'width': 80,
-                'height': 80
-              }
-            },
-            
-            // Raspberry Pi nodes - cyan + server icon
-            {
-              selector: 'node[type="pi"]',
-              style: {
-                'background-color': '#06b6d4',
+                'border-width': 3,
                 'border-color': '#22d3ee',
-                'background-image': 'data:image/svg+xml;utf8,' + encodeURIComponent(icons['icon-pi'].replace(/currentColor/g, '#ffffff')),
-                'background-fit': 'none',
-                'background-clip': 'none',
-                'background-width': '36px',
-                'background-height': '36px'
+                'border-opacity': 1
               }
             },
             
-            // Streaming devices - orange + TV icon
-            {
-              selector: 'node[type="streaming"]',
-              style: {
-                'background-color': '#f97316',
-                'border-color': '#fb923c',
-                'background-image': 'data:image/svg+xml;utf8,' + encodeURIComponent(icons['icon-streaming'].replace(/currentColor/g, '#ffffff')),
-                'background-fit': 'none',
-                'background-clip': 'none',
-                'background-width': '36px',
-                'background-height': '36px'
-              }
-            },
-            
-            // ESP32 devices - yellow + chip icon
-            {
-              selector: 'node[type="esp32"]',
-              style: {
-                'background-color': '#eab308',
-                'border-color': '#facc15',
-                'background-image': 'data:image/svg+xml;utf8,' + encodeURIComponent(icons['icon-esp32'].replace(/currentColor/g, '#ffffff')),
-                'background-fit': 'none',
-                'background-clip': 'none',
-                'background-width': '36px',
-                'background-height': '36px'
-              }
-            },
-            
-            // Container/virtual - gray + stack icon
-            {
-              selector: 'node[type="container"]',
-              style: {
-                'background-color': '#6b7280',
-                'border-color': '#9ca3af',
-                'background-image': 'data:image/svg+xml;utf8,' + encodeURIComponent(icons['icon-container'].replace(/currentColor/g, '#ffffff')),
-                'background-fit': 'none',
-                'background-clip': 'none',
-                'background-width': '36px',
-                'background-height': '36px'
-              }
-            },
-            
-            // Default/unknown devices - blue + router icon
-            {
-              selector: 'node[type="unknown"]',
-              style: {
-                'background-color': '#3b82f6',
-                'border-color': '#60a5fa',
-                'background-image': 'data:image/svg+xml;utf8,' + encodeURIComponent(icons['icon-router'].replace(/currentColor/g, '#ffffff')),
-                'background-fit': 'none',
-                'background-clip': 'none',
-                'background-width': '36px',
-                'background-height': '36px'
-              }
-            },
-            
-            // Edge base style
+            // Edges
             {
               selector: 'edge',
               style: {
-                'width': 2,
-                'curve-style': 'bezier'
-              }
-            },
-            
-            // Ethernet connections - solid blue
-            {
-              selector: 'edge[type="ethernet"]',
-              style: {
-                'line-color': '#58a6ff',
-                'line-style': 'solid'
-              }
-            },
-            
-            // Wireless connections - dashed orange
-            {
-              selector: 'edge[type="wireless"]',
-              style: {
-                'line-color': '#f59e0b',
-                'line-style': 'dashed'
-              }
-            },
-            
-            // Virtual connections - dotted gray
-            {
-              selector: 'edge[type="virtual"]',
-              style: {
-                'line-color': '#6b7280',
-                'line-style': 'dotted'
-              }
-            },
-            
-            // Default edge style
-            {
-              selector: 'edge[type="unknown"]',
-              style: {
-                'line-color': '#475569',
-                'line-style': 'solid'
+                'width': 1,
+                'line-color': '#334155',
+                'line-opacity': 0.4,
+                'curve-style': 'bezier',
+                'target-arrow-shape': 'none'
               }
             }
           ],
           
           layout: {
-            name: 'cose',
-            animate: true,
-            animationDuration: 1000,
-            fit: true,
-            padding: 50,
-            nodeRepulsion: 8000,
-            idealEdgeLength: 150,
-            edgeElasticity: 100,
-            gravity: 1,
-            numIter: 1000,
-            randomize: true
+            name: 'preset'  // Start with no layout (will be applied when mode selected)
+          },
+          
+          minZoom: 0.3,
+          maxZoom: 3,
+          wheelSensitivity: 0.2
+        });
+        
+        // Add event handlers
+        
+        // Single click - show sidebar
+        cy.on('tap', 'node', function(evt) {
+          const node = evt.target;
+          showSidebar(node);
+        });
+        
+        // Right click (cxttap) - show context menu
+        cy.on('cxttap', 'node', function(evt) {
+          const node = evt.target;
+          showContextMenu(evt, node);
+        });
+        
+        // Click on background - close sidebar and context menu
+        cy.on('tap', function(evt) {
+          if (evt.target === cy) {
+            closeSidebar();
+            hideContextMenu();
           }
         });
         
-        console.log('Topology initialized successfully');
+        console.log('Cytoscape initialized successfully');
         
-        // Populate layout dropdown with saved layouts
-        updateLayoutDropdown();
+        // Load the last selected layout mode
+        await loadLastLayoutMode();
         
       } catch (error) {
         console.error('Failed to initialize topology:', error);
+        alert('Failed to load network topology. Please refresh the page.');
       }
     }
-
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', initTopology);
+    
+    async function loadLastLayoutMode() {
+      try {
+        const response = await fetch('/api/layout');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.mode) {
+            document.getElementById('layout-select').value = data.mode;
+            currentLayoutMode = data.mode;
+            console.log(`Restored layout mode: ${data.mode}`);
+            await applyLayoutMode();
+          }
+        }
+      } catch (error) {
+        console.log('No saved layout mode found');
+      }
+    }
+    
+    async function saveLastLayoutMode() {
+      if (!currentLayoutMode) return;
+      
+      try {
+        await fetch('/api/layout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: currentLayoutMode })
+        });
+      } catch (error) {
+        console.error('Failed to save layout mode:', error);
+      }
+    }
+    
+    // Save layout mode whenever it changes
+    const originalApplyLayoutMode = applyLayoutMode;
+    applyLayoutMode = async function() {
+      await originalApplyLayoutMode();
+      await saveLastLayoutMode();
+    };
+    
+    // Initialize when page loads
+    window.addEventListener('DOMContentLoaded', initializeTopology);
   </script>
 </body>
 </html>
