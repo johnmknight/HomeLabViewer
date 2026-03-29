@@ -1,0 +1,6 @@
+data/
+*.pyc
+__pycache__/
+.env
+fetch_ha_data.py
+ha_states_sample.json
