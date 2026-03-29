@@ -38,6 +38,21 @@ A clean, modern web application for visualizing your home lab network topology w
   - **Orange dashed** - Wireless (WiFi)
   - **Gray dotted** - Virtual (container/VM connections)
 
+### Layout Management
+- **💾 Save Custom Layouts** - Manually arrange nodes and save layouts by name
+- **📂 Multiple Layouts** - Store unlimited named layouts in browser localStorage
+- **🔄 Load Saved Layouts** - Instantly restore any saved arrangement
+- **🗑️ Delete Layouts** - Remove unused layouts from storage
+- **🔁 Reset to Auto** - Return to automatic force-directed layout anytime
+- **📅 Timestamp Tracking** - Each layout shows save date in dropdown
+
+**Workflow:**
+1. Drag nodes to desired positions
+2. Click "Save" → enter layout name (e.g., "Rack View", "Logical Flow")
+3. Layout stored in browser with timestamp
+4. Select from dropdown → click "Load" to restore
+5. Click "Reset" to return to automatic layout
+
 ---
 
 ## Architecture
