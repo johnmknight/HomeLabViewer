@@ -35,6 +35,64 @@
       background: #4ade80;
       box-shadow: 0 0 8px #4ade80;
     }
+    .layout-controls {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn {
+      padding: 6px 14px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      color: #e2e8f0;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: #334155;
+      border-color: #475569;
+    }
+    .btn-primary {
+      background: #0ea5e9;
+      border-color: #0ea5e9;
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: #0284c7;
+      border-color: #0284c7;
+    }
+    .btn-danger {
+      background: #dc2626;
+      border-color: #dc2626;
+      color: #fff;
+    }
+    .btn-danger:hover {
+      background: #b91c1c;
+      border-color: #b91c1c;
+    }
+    select {
+      padding: 6px 12px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      color: #e2e8f0;
+      font-size: 13px;
+      cursor: pointer;
+      min-width: 160px;
+    }
+    select:hover {
+      background: #334155;
+      border-color: #475569;
+    }
+    .separator {
+      width: 1px;
+      height: 24px;
+      background: #334155;
+    }
     #cy-container {
       height: calc(100vh - 60px);
       width: 100%;
@@ -51,6 +109,16 @@
   <div id="header">
     <div class="status-dot"></div>
     <h1>HomeLabViewer</h1>
+    <div class="layout-controls">
+      <select id="layout-select">
+        <option value="">Select Layout...</option>
+      </select>
+      <button class="btn btn-primary" onclick="saveLayout()">Save</button>
+      <button class="btn" onclick="loadLayout()">Load</button>
+      <button class="btn btn-danger" onclick="deleteLayout()">Delete</button>
+      <div class="separator"></div>
+      <button class="btn" onclick="resetLayout()">Reset</button>
+    </div>
   </div>
   <div id="cy-container">
     <div id="cy"></div>
@@ -98,6 +166,158 @@
     
     // Initialize Cytoscape.js topology visualization
     let cy;
+
+    // Layout Management Functions
+    const STORAGE_KEY = 'homelabviewer_layouts';
+    
+    function getLayouts() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? JSON.parse(stored) : {};
+    }
+    
+    function saveLayouts(layouts) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(layouts));
+    }
+    
+    function updateLayoutDropdown() {
+      const select = document.getElementById('layout-select');
+      const layouts = getLayouts();
+      const currentValue = select.value;
+      
+      // Clear and rebuild options
+      select.innerHTML = '<option value="">Select Layout...</option>';
+      
+      Object.keys(layouts).sort().forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = `${name} (${new Date(layouts[name].timestamp).toLocaleDateString()})`;
+        select.appendChild(option);
+      });
+      
+      // Restore selection if it still exists
+      if (currentValue && layouts[currentValue]) {
+        select.value = currentValue;
+      }
+    }
+    
+    function saveLayout() {
+      if (!cy) {
+        alert('Topology not loaded yet');
+        return;
+      }
+      
+      const name = prompt('Enter layout name:');
+      if (!name) return;
+      
+      if (name.trim() === '') {
+        alert('Layout name cannot be empty');
+        return;
+      }
+      
+      // Get all node positions
+      const positions = {};
+      cy.nodes().forEach(node => {
+        const pos = node.position();
+        positions[node.id()] = { x: pos.x, y: pos.y };
+      });
+      
+      // Save to localStorage
+      const layouts = getLayouts();
+      layouts[name] = {
+        positions: positions,
+        timestamp: new Date().toISOString()
+      };
+      saveLayouts(layouts);
+      
+      updateLayoutDropdown();
+      document.getElementById('layout-select').value = name;
+      
+      console.log(`Layout "${name}" saved with ${Object.keys(positions).length} nodes`);
+    }
+    
+    function loadLayout() {
+      if (!cy) {
+        alert('Topology not loaded yet');
+        return;
+      }
+      
+      const select = document.getElementById('layout-select');
+      const layoutName = select.value;
+      
+      if (!layoutName) {
+        alert('Please select a layout to load');
+        return;
+      }
+      
+      const layouts = getLayouts();
+      const layout = layouts[layoutName];
+      
+      if (!layout) {
+        alert('Layout not found');
+        return;
+      }
+      
+      // Apply saved positions
+      let appliedCount = 0;
+      cy.nodes().forEach(node => {
+        const savedPos = layout.positions[node.id()];
+        if (savedPos) {
+          node.position(savedPos);
+          appliedCount++;
+        }
+      });
+      
+      console.log(`Layout "${layoutName}" loaded - applied ${appliedCount} node positions`);
+    }
+    
+    function deleteLayout() {
+      const select = document.getElementById('layout-select');
+      const layoutName = select.value;
+      
+      if (!layoutName) {
+        alert('Please select a layout to delete');
+        return;
+      }
+      
+      if (!confirm(`Delete layout "${layoutName}"?`)) {
+        return;
+      }
+      
+      const layouts = getLayouts();
+      delete layouts[layoutName];
+      saveLayouts(layouts);
+      
+      updateLayoutDropdown();
+      console.log(`Layout "${layoutName}" deleted`);
+    }
+    
+    function resetLayout() {
+      if (!cy) {
+        alert('Topology not loaded yet');
+        return;
+      }
+      
+      if (!confirm('Reset to automatic layout? This will discard current positions.')) {
+        return;
+      }
+      
+      // Re-run the cose layout algorithm
+      cy.layout({
+        name: 'cose',
+        animate: true,
+        animationDuration: 1000,
+        fit: true,
+        padding: 50,
+        nodeRepulsion: 8000,
+        idealEdgeLength: 150,
+        edgeElasticity: 100,
+        gravity: 1,
+        numIter: 1000,
+        randomize: true
+      }).run();
+      
+      console.log('Layout reset to automatic');
+    }
 
     async function initTopology() {
       try {
@@ -307,6 +527,9 @@
         });
         
         console.log('Topology initialized successfully');
+        
+        // Populate layout dropdown with saved layouts
+        updateLayoutDropdown();
         
       } catch (error) {
         console.error('Failed to initialize topology:', error);
