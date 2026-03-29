@@ -277,44 +277,228 @@
     let currentLayoutMode = '';
     let contextMenuTarget = null;
     
-    // SVG icon library (Tabler icons)
+    // Industry-standard Tabler Icons library (stroke-based SVG icons)
     const icons = {
-      'icon-router': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-        <path fill="currentColor" d="M17 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"/>
-        <path fill="currentColor" d="M17 14H7a3 3 0 0 0-3 3v2h16v-2a3 3 0 0 0-3-3z"/>
-        <circle fill="currentColor" cx="8" cy="18" r="1"/>
-        <circle fill="currentColor" cx="12" cy="18" r="1"/>
-        <circle fill="currentColor" cx="16" cy="18" r="1"/>
-      </svg>`,
+      // Network Infrastructure
+      'icon-router': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z"/><path d="M17 17l0 .01"/><path d="M13 17l0 .01"/><path d="M15 13l0 -2"/><path d="M11.75 8.75a4 4 0 0 1 6.5 0"/><path d="M8.5 6.5a8 8 0 0 1 13 0"/></svg>`,
+      'icon-switch': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h5l0 10h-5z"/><path d="M16 7h5l0 10h-5z"/><path d="M10 12h4"/><path d="M10 9l-2 3l2 3"/><path d="M14 9l2 3l-2 3"/></svg>`,
+      'icon-network': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 1 0 12 0a6 6 0 0 0 -12 0"/><path d="M12 3c1.333 .333 2 2.333 2 6s-.667 5.667 -2 6"/><path d="M12 3c-1.333 .333 -2 2.333 -2 6s.667 5.667 2 6"/><path d="M6 9h12"/><path d="M3 20h7"/><path d="M14 20h7"/><path d="M10 20a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M12 15v3"/></svg>`,
       
-      'icon-pi': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-        <path fill="currentColor" d="M6 4h12c1.66 0 3 1.34 3 3v2c0 1.66-1.34 3-3 3H6c-1.66 0-3-1.34-3-3V7c0-1.66 1.34-3 3-3zm1 3.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/>
-        <path fill="currentColor" d="M6 12h12c1.66 0 3 1.34 3 3v2c0 1.66-1.34 3-3 3H6c-1.66 0-3-1.34-3-3v-2c0-1.66 1.34-3 3-3zm1 3.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/>
-      </svg>`,
+      // Servers & Compute
+      'icon-server': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4m0 3a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v2a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3z"/><path d="M3 12m0 3a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v2a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3z"/><path d="M7 8l0 .01"/><path d="M7 16l0 .01"/></svg>`,
+      'icon-cpu': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5m0 1a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1z"/><path d="M9 9h6v6h-6z"/><path d="M3 10h2"/><path d="M3 14h2"/><path d="M10 3v2"/><path d="M14 3v2"/><path d="M21 10h-2"/><path d="M21 14h-2"/><path d="M14 21v-2"/><path d="M10 21v-2"/></svg>`,
+      'icon-database': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6m-8 0a8 3 0 1 0 16 0a8 3 0 1 0 -16 0"/><path d="M4 6v6a8 3 0 0 0 16 0v-6"/><path d="M4 12v6a8 3 0 0 0 16 0v-6"/></svg>`,
       
-      'icon-streaming': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-        <path fill="currentColor" d="M21 17H3V7h18m0-2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2z"/>
-      </svg>`,
+      // Containers & Cloud
+      'icon-container': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4v.01"/><path d="M20 20v.01"/><path d="M20 16v.01"/><path d="M20 12v.01"/><path d="M20 8v.01"/><path d="M8 4m0 1a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-6a1 1 0 0 1 -1 -1z"/><path d="M12 9h2"/></svg>`,
+      'icon-cloud': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.657 18c-2.572 0 -4.657 -2.007 -4.657 -4.483c0 -2.475 2.085 -4.482 4.657 -4.482c.393 -1.762 1.794 -3.2 3.675 -3.773c1.88 -.572 3.956 -.193 5.444 1c1.488 1.19 2.162 3.007 1.77 4.769h.99c1.913 0 3.464 1.56 3.464 3.486c0 1.927 -1.551 3.487 -3.465 3.487h-11.878"/></svg>`,
       
-      'icon-esp32': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-        <rect fill="currentColor" x="4" y="5" width="16" height="14" rx="1"/>
-        <circle fill="#0a0e1a" cx="8" cy="9" r="1.5"/>
-        <circle fill="#0a0e1a" cx="16" cy="9" r="1.5"/>
-        <rect fill="#0a0e1a" x="7" y="12" width="10" height="2" rx="1"/>
-        <rect fill="#0a0e1a" x="7" y="15" width="10" height="2" rx="1"/>
-      </svg>`,
+      // Devices
+      'icon-device-desktop': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10z"/><path d="M7 20h10"/><path d="M9 16v4"/><path d="M15 16v4"/></svg>`,
+      'icon-device-mobile': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2v-14z"/><path d="M11 4h2"/><path d="M12 17v.01"/></svg>`,
+      'icon-device-tv': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z"/><path d="M16 3l-4 4l-4 -4"/></svg>`,
+      'icon-printer': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2"/><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4"/><path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z"/></svg>`,
       
-      'icon-container': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-        <rect fill="currentColor" x="3" y="3" width="18" height="5" rx="1"/>
-        <rect fill="currentColor" x="3" y="10" width="18" height="5" rx="1"/>
-        <rect fill="currentColor" x="3" y="17" width="18" height="4" rx="1"/>
-      </svg>`,
+      // IoT & Smart Home
+      'icon-smart-home': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 8.71l-5.333 -4.148a2.666 2.666 0 0 0 -3.274 0l-5.334 4.148a2.665 2.665 0 0 0 -1.029 2.105v7.2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-7.2c0 -.823 -.38 -1.6 -1.03 -2.105"/><path d="M16 15c-2.21 1.333 -5.792 1.333 -8 0"/></svg>`,
+      'icon-bulb': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h1m8 -9v1m8 8h1m-15.4 -6.4l.7 .7m12.1 -.7l-.7 .7"/><path d="M9 16a5 5 0 1 1 6 0a3.5 3.5 0 0 0 -1 3a2 2 0 0 1 -4 0a3.5 3.5 0 0 0 -1 -3"/><path d="M9.7 17l4.6 0"/></svg>`,
+      'icon-temperature': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13.5a4 4 0 1 0 4 0v-8.5a2 2 0 1 0 -4 0v8.5"/><path d="M10 9l4 0"/></svg>`,
       
-      'icon-homeassistant': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-        <path fill="currentColor" d="M12 3L4 9v12h16V9l-8-6z"/>
-        <circle fill="#0a0e1a" cx="12" cy="14" r="3"/>
-      </svg>`
+      // Wireless & Connectivity  
+      'icon-wifi': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18l.01 0"/><path d="M9.172 15.172a4 4 0 0 1 5.656 0"/><path d="M6.343 12.343a8 8 0 0 1 11.314 0"/><path d="M3.515 9.515c4.686 -4.687 12.284 -4.687 17 0"/></svg>`,
+      'icon-bluetooth': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8l10 8l-5 4l0 -16l5 4l-10 8"/></svg>`
     };
+    
+    // Convert SVG to data URI (CORS-safe inline icons)
+    function svgToDataUri(svg, color = '#ffffff') {
+      // Tabler Icons use stroke, not fill
+      const coloredSvg = svg.replace(/stroke="currentColor"/g, `stroke="${color}"`);
+      const encoded = encodeURIComponent(coloredSvg);
+      return `data:image/svg+xml,${encoded}`;
+    }
+    
+    // Industry-standard device icon matching algorithm
+    function getDeviceIcon(device) {
+      const domain = (device.domain || '').toLowerCase();
+      const integration = (device.integration || '').toLowerCase();
+      const group = (device.group || '').toLowerCase();
+      const entityId = (device.id || '').toLowerCase();
+      const deviceClass = (device.device_class || '').toLowerCase();
+      
+      // === NETWORK INFRASTRUCTURE ===
+      
+      // Routers & Gateways
+      if (entityId.includes('router') ||
+          entityId.includes('eero') ||
+          entityId.includes('gateway') ||
+          entityId.includes('modem') ||
+          group === 'router') {
+        return 'icon-router';
+      }
+      
+      // Network Switches
+      if (entityId.includes('switch') && 
+          (entityId.includes('network') || entityId.includes('ethernet') || entityId.includes('poe'))) {
+        return 'icon-switch';
+      }
+      
+      // WiFi Access Points & Mesh Nodes
+      if (entityId.includes('wifi') ||
+          entityId.includes('ap_') ||
+          entityId.includes('mesh') ||
+          entityId.includes('access_point') ||
+          entityId.includes('wap')) {
+        return 'icon-wifi';
+      }
+      
+      // === SERVERS & COMPUTE ===
+      
+      // Raspberry Pi & Single Board Computers
+      if (entityId.includes('pi') ||
+          entityId.includes('mgmt1') ||
+          entityId.includes('dev1') ||
+          entityId.includes('appserv') ||
+          entityId.includes('raspberrypi') ||
+          group === 'infrastructure') {
+        return 'icon-server';
+      }
+      
+      // General Servers
+      if (entityId.includes('server') ||
+          entityId.includes('nas') ||
+          entityId.includes('homeassistant') ||
+          deviceClass === 'server') {
+        return 'icon-server';
+      }
+      
+      // Databases
+      if (entityId.includes('database') ||
+          entityId.includes('mysql') ||
+          entityId.includes('postgres') ||
+          entityId.includes('mongodb') ||
+          entityId.includes('db_')) {
+        return 'icon-database';
+      }
+      
+      // === CONTAINERS & CLOUD ===
+      
+      // Docker Containers & Virtual Machines
+      if (entityId.includes('container') ||
+          entityId.includes('docker') ||
+          entityId.includes('vm_') ||
+          entityId.includes('lxc') ||
+          group === 'virtual') {
+        return 'icon-container';
+      }
+      
+      // Cloud Services
+      if (entityId.includes('cloud') ||
+          integration === 'cloud' ||
+          entityId.includes('aws') ||
+          entityId.includes('azure') ||
+          entityId.includes('gcp')) {
+        return 'icon-cloud';
+      }
+      
+      // === DEVICES ===
+      
+      // Desktop Computers & Workstations
+      if (domain === 'computer' ||
+          entityId.includes('desktop') ||
+          entityId.includes('pc_') ||
+          entityId.includes('workstation') ||
+          entityId.includes('_pc')) {
+        return 'icon-device-desktop';
+      }
+      
+      // Mobile Devices & Phones
+      if (domain === 'device_tracker' ||
+          group === 'mobile' ||
+          entityId.includes('iphone') ||
+          entityId.includes('pixel') ||
+          entityId.includes('android') ||
+          entityId.includes('phone')) {
+        return 'icon-device-mobile';
+      }
+      
+      // TVs & Displays
+      if (domain === 'media_player' ||
+          entityId.includes('tv') ||
+          entityId.includes('display') ||
+          entityId.includes('monitor') ||
+          entityId.includes('roku') ||
+          entityId.includes('chromecast') ||
+          entityId.includes('firestick')) {
+        return 'icon-device-tv';
+      }
+      
+      // Printers & Scanners
+      if (entityId.includes('printer') ||
+          entityId.includes('mfc-') ||
+          entityId.includes('brother') ||
+          entityId.includes('hp_') ||
+          entityId.includes('scanner')) {
+        return 'icon-printer';
+      }
+      
+      // === IOT & SMART HOME ===
+      
+      // ESP32, Microcontrollers & IoT Devices
+      if (entityId.includes('esp32') ||
+          entityId.includes('esp8266') ||
+          entityId.includes('arduino') ||
+          entityId.includes('nodemcu') ||
+          entityId.includes('smarttoolbox') ||
+          entityId.includes('switchbox')) {
+        return 'icon-cpu';
+      }
+      
+      // Smart Lights & Bulbs
+      if (domain === 'light' ||
+          deviceClass === 'light' ||
+          entityId.includes('bulb') ||
+          entityId.includes('lamp')) {
+        return 'icon-bulb';
+      }
+      
+      // Thermostats & Climate Control
+      if (domain === 'climate' ||
+          entityId.includes('thermostat') ||
+          entityId.includes('hvac') ||
+          entityId.includes('t6_pro') ||
+          deviceClass === 'temperature') {
+        return 'icon-temperature';
+      }
+      
+      // Bluetooth Devices
+      if (entityId.includes('bluetooth') ||
+          entityId.includes('ble_') ||
+          integration === 'bluetooth') {
+        return 'icon-bluetooth';
+      }
+      
+      // Z-Wave, Zigbee & Other Smart Home
+      if (group === 'z-wave' ||
+          group === 'zigbee' ||
+          entityId.includes('zwave') ||
+          entityId.includes('zigbee') ||
+          domain === 'switch' ||
+          domain === 'sensor' ||
+          domain === 'binary_sensor') {
+        return 'icon-smart-home';
+      }
+      
+      // === FALLBACKS ===
+      
+      // Network-related fallback
+      if (group === 'network' ||
+          domain === 'network') {
+        return 'icon-network';
+      }
+      
+      // Default: Smart Home icon
+      return 'icon-smart-home';
+    }
     
     // =======================
     // Layout Mode Functions
@@ -694,6 +878,15 @@
         const topologyData = await response.json();
         console.log('Loaded topology:', topologyData.nodes.length, 'nodes');
         
+        // Assign icons to each node based on device matching algorithm
+        topologyData.nodes.forEach(node => {
+          const iconName = getDeviceIcon(node.data);
+          const iconSvg = icons[iconName];
+          if (iconSvg) {
+            node.data.icon = svgToDataUri(iconSvg, '#ffffff');
+          }
+        });
+        
         // Initialize Cytoscape
         cy = cytoscape({
           container: document.getElementById('cy'),
@@ -709,6 +902,12 @@
                 'height': 60,
                 'background-color': 'data(color)',
                 'background-opacity': 1,
+                'background-image': 'data(icon)',  // SVG icon as data URI
+                'background-width': '35%',  // Icon size relative to node
+                'background-height': '35%',
+                'background-fit': 'contain',
+                'background-position-x': '50%',
+                'background-position-y': '50%',
                 'border-width': 3,
                 'border-color': '#ffffff',
                 'border-opacity': 0.5,
