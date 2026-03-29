@@ -407,6 +407,13 @@
       }
       
       cy.layout(layoutConfig).run();
+      
+      // Force fit to viewport after layout completes
+      setTimeout(() => {
+        cy.fit(null, 50);  // Fit all nodes with 50px padding
+        cy.center();  // Center the graph
+      }, layoutConfig.animationDuration + 100);
+      
       console.log(`Applied ${currentLayoutMode} layout`);
     }
     
@@ -749,9 +756,13 @@
             name: 'preset'  // Start with no layout (will be applied when mode selected)
           },
           
-          minZoom: 0.3,
+          minZoom: 0.5,  // Don't allow zooming out too far (was 0.3)
           maxZoom: 3,
-          wheelSensitivity: 0.2
+          wheelSensitivity: 0.2,
+          
+          // Auto-fit on initialization
+          autoungrabify: false,
+          autounselectify: false
         });
         
         // Add event handlers

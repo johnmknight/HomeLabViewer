@@ -90,11 +90,49 @@ async def get_topology():
     edges = []
     groups = set()
     
+    # ALLOWLIST: Only include domains that represent PHYSICAL devices
+    # This dramatically reduces clutter from virtual entities, scenes, automations, etc.
+    physical_device_domains = {
+        'light',           # Smart bulbs, LED strips
+        'switch',          # Smart switches, plugs
+        'climate',         # Thermostats, HVAC
+        'lock',            # Smart locks
+        'cover',           # Blinds, garage doors
+        'fan',             # Fans
+        'vacuum',          # Robot vacuums
+        'camera',          # Security cameras
+        'media_player',    # TVs, speakers, media devices
+        'remote',          # IR remotes
+        'alarm_control_panel',  # Security systems
+        'device_tracker',  # Presence detection (phones, etc.)
+        'sensor',          # Physical sensors only (will filter further)
+        'binary_sensor'    # Physical binary sensors only (will filter further)
+    }
+    
+    print(f"DEBUG: Total devices before filtering: {len(devices)}")
+    
     for device in devices:
-        # Filter to relevant device types (skip pure update entities)
         domain = device.get('domain', '')
-        if domain == 'update':
+        entity_id = device.get('id', '')
+        
+        # ALLOWLIST: Skip anything not in physical device domains
+        if domain not in physical_device_domains:
+            print(f"DEBUG: Skipping {entity_id} with domain {domain}")
             continue
+        
+        # Additional filtering for sensors - only include physical measurement sensors
+        if domain in ['sensor', 'binary_sensor']:
+            # Skip virtual/system sensors
+            entity_lower = entity_id.lower()
+            skip_patterns = [
+                'time', 'date', 'uptime', 'last_boot', 'version',
+                'update', 'sun_', 'moon_', 'season', 'nordpool',
+                'memory', 'cpu', 'disk', 'load', 'network',
+                'battery_state', 'charging', '_ip_', 'ssid',
+                'last_changed', 'last_updated', '_status'
+            ]
+            if any(pattern in entity_lower for pattern in skip_patterns):
+                continue
         
         # Extract group (already assigned by microservice)
         group = device.get('group', 'Unassigned')
