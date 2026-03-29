@@ -1,162 +1,169 @@
 # HomeLabViewer
 
-**Full Network Topology Visualization for Home Assistant**
+**Network Topology Visualization for SmartLab Infrastructure**
 
-HomeLabViewer provides a comprehensive visual representation of your entire network, pulling device data from Home Assistant's discovery system and displaying it with SVG icons, color-coded device types, and connection indicators (ethernet vs wireless).
+A clean, modern web application for visualizing your home lab network topology with SVG icons, device groupings, and color-coded connection types.
 
-![Network Topology](docs/screenshot.png)
+![Network Topology](https://img.shields.io/badge/Status-Production-brightgreen) ![Python](https://img.shields.io/badge/Python-3.11-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-Latest-009688)
+
+---
 
 ## Features
 
-✅ **Complete Network Visibility**
-- Displays all 29+ devices discovered by Home Assistant
-- Category groupings (Infrastructure, Automation, Network, Virtual, Other)
+### Visual Design
+- **📦 Device Groupings** - Semi-transparent category boxes organize devices by type:
+  - Infrastructure (Core Raspberry Pis)
+  - Home Automation (Smart devices, ESP32s)
+  - Network Equipment (Router, mesh nodes)
+  - Virtual Services (Containers)
+  - Other Devices (PCs, dev services)
 
-✅ **Visual Device Icons**
-- SVG Tabler icons for each device type
-- Router, Raspberry Pi, Streaming, ESP32, Container icons
+- **🎨 SVG Icons** - Tabler icons show device function at a glance:
+  - Router icon (purple) - Network routers
+  - Server/Pi icon (cyan) - Raspberry Pis
+  - TV icon (orange) - Streaming devices
+  - Chip icon (yellow) - ESP32 microcontrollers
+  - Stack icon (gray) - Virtual/containers
 
-✅ **Color-Coded Devices**
-- Purple - Routers (eero)
-- Cyan - Raspberry Pis (mgmt1, dev1, appserv1, Home Assistant)
-- Orange - Streaming devices (Chromecast, Roku)
-- Yellow - ESP32 microcontrollers
-- Gray - Virtual/Container services
-- Blue - Unknown/Other devices
+- **🌈 Color-Coded Devices** - Type-based color system:
+  - **Purple** - Routers (eero)
+  - **Cyan** - Raspberry Pis (mgmt1, dev1, appserv1, Home Assistant)
+  - **Orange** - Streaming (Chromecast, Roku)
+  - **Yellow** - ESP32 devices
+  - **Gray** - Containers
+  - **Blue** - Unknown devices
 
-✅ **Connection Type Visualization**
-- Blue solid lines - Ethernet (wired) connections
-- Orange dashed lines - Wireless (WiFi) connections
-- Gray dotted lines - Virtual connections
+- **📡 Connection Line Colors** - Visual connection type indicators:
+  - **Blue solid** - Ethernet (wired connections)
+  - **Orange dashed** - Wireless (WiFi)
+  - **Gray dotted** - Virtual (container/VM connections)
 
-✅ **Live Data Integration**
-- Pulls from SmartLabNetOps API endpoint
-- Real-time device status
-- Home Assistant discovery integration
+---
 
 ## Architecture
 
 ```
-HomeLabViewer
-├── client/
-│   ├── index.html          # Main application (SVG icons, Cytoscape.js)
-│   └── lib/                # Local JavaScript libraries (no CDN)
-│       ├── cytoscape.min.js
-│       ├── cola.min.js
-│       └── cytoscape-cola.min.js
-├── main.py                 # FastAPI backend
-├── requirements.txt
-├── Dockerfile
-└── README.md
+Home Assistant (192.168.4.51)
+    ↓ Discovers devices
+SmartLabNetOps API (192.168.4.150:8096)
+    ↓ Provides /api/topology endpoint
+HomeLabViewer Backend (FastAPI)
+    ↓ Pass-through proxy
+Cytoscape.js Frontend
+    ↓ Renders with icons + colors
+User's Browser
 ```
 
-**Data Flow:**
-```
-Home Assistant → SmartLabNetOps API → HomeLabViewer Backend → Cytoscape.js Frontend
-     (discovers devices)    (aggregates)     (passes through)      (renders topology)
-```
+### Data Flow
+1. **Home Assistant** discovers devices on the network
+2. **SmartLabNetOps** reads HA inventory and formats as Cytoscape.js topology
+3. **HomeLabViewer** serves the visualization frontend
+4. **Frontend** fetches `/api/topology` and renders 29 devices + 5 category groups
+
+---
 
 ## Technology Stack
 
-- **Backend:** FastAPI (Python 3.11+)
-- **Frontend:** Vanilla JavaScript + Cytoscape.js 3.28.1
-- **Layout:** Cose force-directed algorithm
-- **Data Source:** SmartLabNetOps API (`http://192.168.4.150:8096/api/topology`)
-- **Icons:** SVG Tabler icons (embedded, no CDN)
+### Backend
+- **FastAPI** - Modern Python web framework with async support
+- **httpx** - Async HTTP client for proxying SmartLabNetOps API
+- **uvicorn** - ASGI server
+
+### Frontend
+- **Cytoscape.js 3.28.1** - Graph visualization library
+- **Cose layout** - Force-directed graph layout algorithm
+- **Tabler Icons** - SVG icon library (filled versions)
+- **Vanilla JavaScript** - No framework dependencies
+
+### Infrastructure
+- **Docker** - Containerized deployment
+- **nginx** - Reverse proxy on appserv1
+- **Raspberry Pi** - Deployment target (appserv1)
+
+---
 
 ## Installation
 
 ### Prerequisites
 - Python 3.11+
-- Access to SmartLabNetOps API endpoint
 - Docker (optional, for containerized deployment)
+- Access to SmartLabNetOps API at `http://192.168.4.150:8096`
 
 ### Local Development
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/johnmknight/HomeLabViewer.git
-   cd HomeLabViewer
-   ```
+```bash
+# Clone the repository
+git clone https://github.com/johnmknight/HomeLabViewer.git
+cd HomeLabViewer
 
-2. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+# Install dependencies
+pip install -r requirements.txt
 
-3. **Run the server:**
-   ```bash
-   python main.py
-   ```
+# Run the server
+uvicorn main:app --host 0.0.0.0 --port 8200 --reload
 
-4. **Open in browser:**
-   ```
-   http://localhost:8200
-   ```
+# Access at http://localhost:8200
+```
 
 ### Docker Deployment
 
-1. **Build the image:**
-   ```bash
-   docker build -t homelabviewer:latest .
-   ```
+```bash
+# Build the image
+docker build -t homelabviewer:latest .
 
-2. **Run the container:**
-   ```bash
-   docker run -d --name homelabviewer -p 8200:8200 homelabviewer:latest
-   ```
-
-3. **Access the application:**
-   ```
-   http://your-server-ip:8200
-   ```
-
-## Production Deployment
-
-For deployment to appserv1 with nginx reverse proxy, see [DEPLOYMENT.md](DEPLOYMENT.md).
-
-**Recommended setup:**
-- **Host:** appserv1 (192.168.4.148)
-- **Port:** 8200
-- **Reverse Proxy:** nginx at `/homelabviewer/`
-- **URL:** `http://192.168.4.148/homelabviewer/`
-
-## Configuration
-
-The application fetches topology data from the SmartLabNetOps API. To change the data source, update `main.py`:
-
-```python
-async def fetch_ha_topology():
-    response = await client.get("http://192.168.4.150:8096/api/topology")
-    # Change URL to your SmartLabNetOps instance
+# Run the container
+docker run -d \
+  --name homelabviewer \
+  --restart unless-stopped \
+  -p 8200:8200 \
+  homelabviewer:latest
 ```
 
-## API Endpoint
+### Production Deployment (appserv1)
 
-### GET /api/topology
+See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment instructions including:
+- Raspberry Pi setup
+- nginx reverse proxy configuration
+- Docker container management
+- Health checks and monitoring
 
-Returns network topology in Cytoscape.js format:
+---
 
+## API Endpoints
+
+### `GET /`
+Serves the main visualization interface
+
+### `GET /api/topology`
+Returns network topology data in Cytoscape.js format
+
+**Response Format:**
 ```json
 {
   "nodes": [
     {
       "data": {
         "id": "mgmt1",
-        "label": "mgmt1 (Management Node)",
+        "label": "mgmt1",
         "type": "pi",
         "ip": "192.168.4.150",
         "status": "online",
-        "parent": "infrastructure",
-        "isParent": false
+        "parent": "cat_infrastructure"
+      }
+    },
+    {
+      "data": {
+        "id": "cat_infrastructure",
+        "label": "INFRASTRUCTURE",
+        "isParent": true
       }
     }
   ],
   "edges": [
     {
       "data": {
-        "source": "router-main",
-        "target": "mgmt1",
+        "source": "mgmt1",
+        "target": "eero-router",
         "type": "ethernet"
       }
     }
@@ -164,78 +171,161 @@ Returns network topology in Cytoscape.js format:
 }
 ```
 
-## Development
+---
 
-### Project Structure
+## Customization
 
-**Backend (`main.py`):**
-- FastAPI server on port 8200
-- Single endpoint: `/api/topology`
-- Proxies data from SmartLabNetOps API
-- No data transformation (pass-through)
+### Adding New Device Types
 
-**Frontend (`client/index.html`):**
-- Cytoscape.js initialization
-- SVG icon library (6 device types)
-- Category node styling (parent containers)
-- Connection line styling (ethernet/wireless/virtual)
-- Cose force-directed layout algorithm
+Edit `client/index.html`:
 
-### Customization
-
-**Add new device icons:**
+1. **Add SVG icon** to the `icons` object:
 ```javascript
 const icons = {
-  'icon-yourdevice': `<svg xmlns="http://www.w3.org/2000/svg" ...>
-    <!-- SVG path here -->
-  </svg>`
+  'icon-newtype': `<svg>...</svg>`
 };
 ```
 
-**Change color scheme:**
+2. **Add color styling** in Cytoscape style array:
 ```javascript
 {
-  selector: 'node[type="pi"]',
+  selector: 'node[type="newtype"]',
   style: {
-    'background-color': '#06b6d4',  // Change color here
-    'border-color': '#22d3ee'
+    'background-color': '#hex-color',
+    'border-color': '#hex-color',
+    'background-image': 'data:image/svg+xml;utf8,' + 
+      encodeURIComponent(icons['icon-newtype'].replace(/currentColor/g, '#ffffff'))
   }
 }
 ```
 
+### Changing Layout Parameters
+
+Adjust the Cose layout in `client/index.html`:
+
+```javascript
+layout: {
+  name: 'cose',
+  nodeRepulsion: 8000,    // Spacing between nodes
+  idealEdgeLength: 150,   // Preferred edge length
+  numIter: 1000,          // Layout iterations
+  randomize: true         // Random initial positions
+}
+```
+
+### Connection Type Colors
+
+Modify edge styles in `client/index.html`:
+
+```javascript
+{
+  selector: 'edge[type="ethernet"]',
+  style: {
+    'line-color': '#58a6ff',  // Blue
+    'line-style': 'solid'
+  }
+}
+```
+
+---
+
+## Network Topology
+
+**Current Display: 29 Devices + 5 Category Groups**
+
+### Infrastructure (4 devices)
+- mgmt1 (192.168.4.150) - Management Pi
+- dev1 (192.168.4.49) - DNS/Pi-hole
+- appserv1 (192.168.4.148) - Docker workload host
+- Home Assistant (192.168.4.51) - HA server
+
+### Home Automation (9 devices)
+- SmartToolbox ESP32
+- SwitchBox controller
+- 2× ESP32 nodes
+- Chromecast
+- Roku
+- Garage door controller
+- Smart sensors
+
+### Network Equipment (4 devices)
+- eero router (primary)
+- eero mesh node
+- TP-Link switch
+- Network printer
+
+### Virtual Services (1 device)
+- Container service (.210)
+
+### Other Devices (11+ devices)
+- Gaming PC
+- AI PC
+- Dev services
+- Unknown devices
+
+---
+
+## Development
+
+### Project Structure
+
+```
+HomeLabViewer/
+├── main.py                 # FastAPI backend
+├── requirements.txt        # Python dependencies
+├── Dockerfile             # Container build config
+├── client/
+│   ├── index.html         # Main visualization page
+│   └── lib/               # JavaScript libraries
+│       ├── cytoscape.min.js
+│       ├── cola.min.js
+│       └── cytoscape-cola.min.js
+├── README.md              # This file
+├── DEPLOYMENT.md          # Production deployment guide
+└── PROJECT_SUMMARY.md     # Project overview
+```
+
+### Git Workflow
+
+```bash
+# Feature development
+git checkout -b feature/new-feature
+git commit -am "Add new feature"
+git push origin feature/new-feature
+
+# Production deployment
+git checkout master
+git merge feature/new-feature
+git push origin master
+```
+
+---
+
 ## Related Projects
 
 - **[SmartLabNetOps](https://github.com/johnmknight/SmartLabNetOps)** - Network operations dashboard (data source)
-- **[smartlab-infra](https://github.com/johnmknight/smartlab-infra)** - Docker compose infrastructure
 - **[HA Device Atlas](https://github.com/johnmknight/ha-device-atlas)** - Home Assistant device categorization
+- **[smartlab-infra](https://github.com/johnmknight/smartlab-infra)** - Docker compose infrastructure
 
-## Screenshots
-
-**Full Network Topology:**
-- 29 devices with category groupings
-- Color-coded device types
-- Connection type indicators
-
-**Device Categories:**
-- Infrastructure (Core) - Raspberry Pis
-- Home Automation - IoT, ESP32, smart sensors
-- Network Equipment - Router, mesh nodes
-- Virtual Services - Containers
-- Other Devices - PCs, unknown devices
+---
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT License - See LICENSE file for details
+
+---
 
 ## Author
 
-**John M. Knight**
-- GitHub: [@johnmknight](https://github.com/johnmknight)
-- Project: SmartLab Home Network Visualization
+**John Knight**  
+Senior Program Manager | IoT & Connected Products  
+[GitHub](https://github.com/johnmknight) | [LinkedIn](https://linkedin.com/in/johnmknight)
+
+---
 
 ## Acknowledgments
 
-- **Cytoscape.js** - Graph visualization library
+- **Cytoscape.js** - Graph visualization framework
 - **Tabler Icons** - SVG icon library
-- **FastAPI** - Python web framework
-- **Home Assistant** - Smart home platform
+- **FastAPI** - Modern Python web framework
+- **Home Assistant** - Device discovery and inventory
