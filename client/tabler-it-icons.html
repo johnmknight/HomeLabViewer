@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tabler IT Icons - Full Library</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0e1a;
+      color: #e0e0e0;
+      padding: 40px;
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 600;
+      color: #22d3ee;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      font-size: 16px;
+      color: #64748b;
+      margin-bottom: 40px;
+    }
+    .search-box {
+      margin-bottom: 30px;
+    }
+    input[type="text"] {
+      width: 100%;
+      max-width: 600px;
+      padding: 12px 20px;
+      font-size: 16px;
+      background: #141824;
+      border: 1px solid #2a2f3f;
+      border-radius: 8px;
+      color: #e2e8f0;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #22d3ee;
+    }
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 16px;
+      max-width: 1800px;
+    }
+    .icon-card {
+      background: #141824;
+      border: 1px solid #2a2f3f;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .icon-card:hover {
+      border-color: #22d3ee;
+      transform: translateY(-2px);
+    }
+    .icon-display {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-display svg {
+      width: 40px;
+      height: 40px;
+      color: #22d3ee;
+    }
+    .icon-name {
+      font-size: 11px;
+      color: #94a3b8;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tabler IT Icons Library</h1>
+  <div class="subtitle">All network, infrastructure, and IT-related icons from Tabler Icons</div>
+  
+  <div class="search-box">
+    <input type="text" id="search" placeholder="Search icons..." oninput="filterIcons()">
+  </div>
+  
+  <div class="icon-grid" id="icon-grid"></div>
+
+  <script>
+    // IT-related Tabler Icons (fetched from CDN)
+    const iconNames = [
+      'server', 'server-2', 'server-bolt', 'server-cog', 'database', 'database-export', 'database-import',
+      'router', 'network', 'wifi', 'wifi-0', 'wifi-1', 'wifi-2', 'wifi-off',
+      'cloud', 'cloud-computing', 'cloud-data-connection', 'cloud-download', 'cloud-upload',
+      'device-desktop', 'device-laptop', 'device-mobile', 'device-tablet', 'devices', 'devices-2', 'devices-pc',
+      'cpu', 'cpu-2', 'microchip', 'chip',
+      'terminal', 'terminal-2', 'code', 'code-dots',
+      'api', 'api-app', 'webhook',
+      'plug', 'plug-connected', 'plug-connected-x', 'plug-off', 'plug-x',
+      'usb', 'cable',
+      'sitemap', 'topology-full', 'topology-ring', 'topology-star',
+      'lan', 'ethernet',
+      'switch', 'switch-horizontal', 'switch-vertical',
+      'door', 'door-enter', 'door-exit',
+      'hierarchy', 'hierarchy-2', 'hierarchy-3',
+      'container', 'container-off',
+      'box', 'package', 'packages',
+      'brand-docker', 'brand-kubernetes',
+      'home', 'home-2', 'building', 'building-warehouse',
+      'stack', 'stack-2', 'stack-3',
+      'layers-linked', 'layers-difference', 'layers-intersect', 'layers-subtract', 'layers-union',
+      'circuit-ground', 'circuit-ground-digital', 'circuit-resistor', 'circuit-capacitor',
+      'power', 'battery', 'battery-charging', 'plug',
+      'antenna', 'antenna-bars-1', 'antenna-bars-2', 'antenna-bars-3', 'antenna-bars-4', 'antenna-bars-5',
+      'bluetooth', 'bluetooth-connected', 'bluetooth-off', 'bluetooth-x',
+      'cast', 'cast-off',
+      'printer', 'device-gamepad', 'device-speaker',
+      'hdd', 'device-sd-card', 'device-floppy',
+      'chart-dots-2', 'chart-line', 'activity', 'pulse',
+      'settings', 'tool', 'adjustments', 'adjustments-alt', 'adjustments-horizontal',
+      'server-2', 'server-bolt', 'cloud-computing'
+    ];
+
+    async function loadIcons() {
+      const grid = document.getElementById('icon-grid');
+      
+      for (const name of iconNames) {
+        try {
+          const response = await fetch(`https://cdn.jsdelivr.net/npm/@tabler/icons@2.47.0/icons/${name}.svg`);
+          if (response.ok) {
+            const svgText = await response.text();
+            
+            const card = document.createElement('div');
+            card.className = 'icon-card';
+            card.dataset.name = name;
+            card.onclick = () => copyIconName(name);
+            
+            card.innerHTML = `
+              <div class="icon-display">${svgText}</div>
+              <div class="icon-name">${name}</div>
+            `;
+            
+            grid.appendChild(card);
+          }
+        } catch (e) {
+          console.error(`Failed to load ${name}:`, e);
+        }
+      }
+    }
+
+    function filterIcons() {
+      const search = document.getElementById('search').value.toLowerCase();
+      const cards = document.querySelectorAll('.icon-card');
+      
+      cards.forEach(card => {
+        const name = card.dataset.name.toLowerCase();
+        card.style.display = name.includes(search) ? 'block' : 'none';
+      });
+    }
+
+    function copyIconName(name) {
+      navigator.clipboard.writeText(name);
+      console.log('Copied:', name);
+    }
+
+    loadIcons();
+  </script>
+</body>
+</html>

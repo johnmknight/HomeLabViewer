@@ -73,13 +73,14 @@ async def get_topology():
     """
     Fetch devices from SmartLabDeviceRegistry and transform to Cytoscape format
     """
-    # Color mapping for groups
+    # Color mapping for network types
     group_colors = {
-        "Management": "#f59e0b",  # Orange
-        "IoT": "#10b981",         # Green
-        "Networking": "#3b82f6",  # Blue
-        "Compute": "#8b5cf6",     # Purple
-        "Unassigned": "#6b7280"   # Gray
+        "Z-Wave": "#9333ea",    # Purple - Z-Wave protocol
+        "Zigbee": "#10b981",    # Green - Zigbee protocol
+        "WiFi": "#3b82f6",      # Blue - WiFi devices
+        "Mobile": "#f59e0b",    # Orange - Phone/mobile trackers
+        "Wired": "#6b7280",     # Gray - Ethernet/wired devices
+        "Unknown": "#64748b"    # Slate gray - unclassified
     }
     
     # Fetch enriched devices from microservice
@@ -161,4 +162,51 @@ async def get_topology():
         
         nodes.append({"data": node_data})
     
+    # Generate network topology edges
+    # Strategy: Connect devices to infrastructure based on their group/network type
+    
+    # Find infrastructure nodes (routers, access points, network devices)
+    router_ids = [n['data']['id'] for n in nodes if 'router' in n['data']['id'].lower() or n['data']['domain'] == 'device_tracker']
+    ha_server_id = next((n['data']['id'] for n in nodes if 'home_assistant' in n['data']['id'].lower() or n['data']['integration'] == 'homeassistant'), None)
+    
+    # If we have a HA server, use it as central hub, otherwise use first router
+    hub_id = ha_server_id if ha_server_id else (router_ids[0] if router_ids else None)
+    
+    if hub_id:
+        for node in nodes:
+            node_id = node['data']['id']
+            node_group = node['data']['group']
+            
+            # Don't connect hub to itself
+            if node_id == hub_id:
+                continue
+            
+            # Connect based on network group
+            if node_group in ['WiFi', 'Wired', 'Mobile']:
+                # Direct connection to hub
+                edges.append({
+                    "data": {
+                        "id": f"{hub_id}-{node_id}",
+                        "source": hub_id,
+                        "target": node_id
+                    }
+                })
+            elif node_group in ['Z-Wave', 'Zigbee']:
+                # These connect through their controller (usually HA server)
+                if ha_server_id and node_id != ha_server_id:
+                    edges.append({
+                        "data": {
+                            "id": f"{ha_server_id}-{node_id}",
+                            "source": ha_server_id,
+                            "target": node_id
+                        }
+                    })
+    
+    print(f"DEBUG: Generated {len(nodes)} nodes and {len(edges)} edges")
     return {"nodes": nodes, "edges": edges}
+
+
+# Start the server
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8200)
